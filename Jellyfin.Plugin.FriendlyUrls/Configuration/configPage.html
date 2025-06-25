@@ -60,41 +60,69 @@
         </div>
 
         <script type="text/javascript">
-            $('.pluginConfigurationForm').on('submit', function (e) {
-                e.preventDefault();
-                Dashboard.showLoadingMsg();
+            (function () {
+                var pluginId = '12345678-1234-5678-9012-123456789012';
 
-                ApiClient.getPluginConfiguration(PluginManager.plugins.find(p => p.Name === 'Friendly URLs').Id).then(function (config) {
-                    config.EnableMovieUrls = $('#enableMovieUrls').checked();
-                    config.EnableShowUrls = $('#enableShowUrls').checked();
-                    config.EnablePersonUrls = $('#enablePersonUrls').checked();
-                    config.EnableCollectionUrls = $('#enableCollectionUrls').checked();
-                    config.BaseUrl = $('#baseUrl').val();
-                    config.AutoGenerateUrls = $('#autoGenerateUrls').checked();
+                function saveConfiguration() {
+                    Dashboard.showLoadingMsg();
 
-                    ApiClient.updatePluginConfiguration(PluginManager.plugins.find(p => p.Name === 'Friendly URLs').Id, config).then(function () {
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.EnableMovieUrls = document.getElementById('enableMovieUrls').checked;
+                        config.EnableShowUrls = document.getElementById('enableShowUrls').checked;
+                        config.EnablePersonUrls = document.getElementById('enablePersonUrls').checked;
+                        config.EnableCollectionUrls = document.getElementById('enableCollectionUrls').checked;
+                        config.BaseUrl = document.getElementById('baseUrl').value;
+                        config.AutoGenerateUrls = document.getElementById('autoGenerateUrls').checked;
+
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
+                            Dashboard.hideLoadingMsg();
+                            require(['toast'], function (toast) {
+                                toast('Configuration saved');
+                            });
+                        }).catch(function (error) {
+                            Dashboard.hideLoadingMsg();
+                            require(['toast'], function (toast) {
+                                toast('Error saving configuration: ' + error);
+                            });
+                        });
+                    }).catch(function (error) {
                         Dashboard.hideLoadingMsg();
                         require(['toast'], function (toast) {
-                            toast('Configuration saved');
+                            toast('Error loading configuration: ' + error);
                         });
                     });
+                }
+
+                function loadConfiguration() {
+                    Dashboard.showLoadingMsg();
+
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        document.getElementById('enableMovieUrls').checked = config.EnableMovieUrls || false;
+                        document.getElementById('enableShowUrls').checked = config.EnableShowUrls || false;
+                        document.getElementById('enablePersonUrls').checked = config.EnablePersonUrls || false;
+                        document.getElementById('enableCollectionUrls').checked = config.EnableCollectionUrls || false;
+                        document.getElementById('baseUrl').value = config.BaseUrl || '/web';
+                        document.getElementById('autoGenerateUrls').checked = config.AutoGenerateUrls || false;
+
+                        Dashboard.hideLoadingMsg();
+                    }).catch(function (error) {
+                        Dashboard.hideLoadingMsg();
+                        require(['toast'], function (toast) {
+                            toast('Error loading configuration: ' + error);
+                        });
+                    });
+                }
+
+                // Event handlers
+                document.querySelector('.pluginConfigurationForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    saveConfiguration();
                 });
-            });
 
-            $('.pluginConfigurationPage').on('pageshow', function () {
-                Dashboard.showLoadingMsg();
-
-                ApiClient.getPluginConfiguration(PluginManager.plugins.find(p => p.Name === 'Friendly URLs').Id).then(function (config) {
-                    $('#enableMovieUrls').checked(config.EnableMovieUrls || false);
-                    $('#enableShowUrls').checked(config.EnableShowUrls || false);
-                    $('#enablePersonUrls').checked(config.EnablePersonUrls || false);
-                    $('#enableCollectionUrls').checked(config.EnableCollectionUrls || false);
-                    $('#baseUrl').val(config.BaseUrl || '/web');
-                    $('#autoGenerateUrls').checked(config.AutoGenerateUrls || false);
-
-                    Dashboard.hideLoadingMsg();
+                document.querySelector('.pluginConfigurationPage').addEventListener('pageshow', function () {
+                    loadConfiguration();
                 });
-            });
+            })();
         </script>
     </div>
 </body>

@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Globalization;
 
-namespace FriendlyUrls.Services
+namespace Jellyfin.Plugin.FriendlyUrls.Services
 {
     /// <summary>
     /// Service for creating URL-friendly slugs from text

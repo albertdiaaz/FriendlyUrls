@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FriendlyUrls.Models
+namespace Jellyfin.Plugin.FriendlyUrls.Models
 {
     /// <summary>
     /// Represents a mapping between a friendly URL and original Jellyfin URL

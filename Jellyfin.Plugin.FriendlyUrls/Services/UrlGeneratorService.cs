@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Text.RegularExpressions;
-using System.Globalization;
-using System.Text;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Model.Entities;
 using MediaBrowser.Controller.Library;
-using FriendlyUrls.Models;
+using Jellyfin.Plugin.FriendlyUrls.Models;
 
-namespace FriendlyUrls.Services
+namespace Jellyfin.Plugin.FriendlyUrls.Services
 {
     public interface IUrlGeneratorService
     {
@@ -38,7 +34,7 @@ namespace FriendlyUrls.Services
         /// <returns>Friendly URL string or null if not supported</returns>
         public string? GenerateFriendlyUrl(BaseItem item)
         {
-            var baseUrl = Plugin.Instance?.Configuration?.BaseUrl?.TrimEnd('/') ?? "/web";
+            var baseUrl = Jellyfin.Plugin.FriendlyUrls.Plugin.Instance?.Configuration?.BaseUrl?.TrimEnd('/') ?? "/web";
 
             return item switch
             {
@@ -65,7 +61,7 @@ namespace FriendlyUrls.Services
             if (string.IsNullOrEmpty(friendlyUrl))
                 return null;
 
-            // Get ServerId from the item's InternalId (fallback approach)
+            // Get server ID (for Jellyfin, this is usually a fixed value or can be obtained from configuration)
             var serverId = GetServerIdFromItem(item);
 
             return new FriendlyUrlMapping
@@ -74,7 +70,7 @@ namespace FriendlyUrls.Services
                 ItemId = item.Id,
                 ItemType = item.GetType().Name,
                 FriendlyUrl = friendlyUrl,
-                OriginalUrl = $"/web/#/details?id={item.Id}&serverId={serverId}",
+                OriginalUrl = $"/web/index.html#!/details?id={item.Id}&serverId={serverId}",
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
             };
@@ -87,23 +83,18 @@ namespace FriendlyUrls.Services
         /// <returns>Server ID string</returns>
         private string GetServerIdFromItem(BaseItem item)
         {
-            // Try to get server ID from various sources
             try
             {
-                // Method 1: Try to get from library manager
-                var library = _libraryManager.GetItemById(item.Id);
-                if (library != null)
-                {
-                    // Return a default server ID or extract from context
-                    return "default-server-id";
-                }
+                // For Jellyfin, the server ID is typically available from the system info
+                // This is a simplified approach - in a real implementation you might want to
+                // get this from Jellyfin's configuration or system info
+                return Environment.MachineName.ToLowerInvariant().Replace(" ", "-");
             }
             catch
             {
-                // Fallback to empty string
+                // Fallback to a default value
+                return "jellyfin-server";
             }
-
-            return "";
         }
     }
 }

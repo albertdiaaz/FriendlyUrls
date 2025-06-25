@@ -4,9 +4,9 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using FriendlyUrls.Configuration;
+using Jellyfin.Plugin.FriendlyUrls.Configuration;
 
-namespace FriendlyUrls
+namespace Jellyfin.Plugin.FriendlyUrls
 {
     /// <summary>
     /// Main plugin class that generates friendly URLs for movies, shows, people and more

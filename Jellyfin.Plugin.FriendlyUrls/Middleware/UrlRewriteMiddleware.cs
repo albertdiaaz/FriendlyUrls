@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using FriendlyUrls.Data;
+using Jellyfin.Plugin.FriendlyUrls.Data;
 
-namespace FriendlyUrls.Middleware
+namespace Jellyfin.Plugin.FriendlyUrls.Middleware
 {
     /// <summary>
     /// Middleware that intercepts friendly URLs and rewrites them to original URLs

@@ -1,6 +1,6 @@
 ﻿using MediaBrowser.Model.Plugins;
 
-namespace FriendlyUrls.Configuration
+namespace Jellyfin.Plugin.FriendlyUrls.Configuration
 {
     /// <summary>
     /// Plugin configuration settings

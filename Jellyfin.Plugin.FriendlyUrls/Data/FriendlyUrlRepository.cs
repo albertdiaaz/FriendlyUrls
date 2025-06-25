@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
 using MediaBrowser.Common.Configuration;
-using FriendlyUrls.Models;
+using Jellyfin.Plugin.FriendlyUrls.Models;
 
-namespace FriendlyUrls.Data
+namespace Jellyfin.Plugin.FriendlyUrls.Data
 {
     public interface IFriendlyUrlRepository
     {

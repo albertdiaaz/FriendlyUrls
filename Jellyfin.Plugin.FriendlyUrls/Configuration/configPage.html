@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Friendly URLs - Configuration</title>
+</head>
+<body>
+    <div data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form class="pluginConfigurationForm">
+                    <h2>Friendly URLs Configuration</h2>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input type="checkbox" is="emby-checkbox" id="enableMovieUrls" />
+                            <span>Enable URLs for movies</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input type="checkbox" is="emby-checkbox" id="enableShowUrls" />
+                            <span>Enable URLs for shows</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input type="checkbox" is="emby-checkbox" id="enablePersonUrls" />
+                            <span>Enable URLs for people</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input type="checkbox" is="emby-checkbox" id="enableCollectionUrls" />
+                            <span>Enable URLs for collections</span>
+                        </label>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label for="baseUrl">Base URL:</label>
+                        <input type="text" id="baseUrl" is="emby-input" />
+                        <div class="fieldDescription">Base URL for friendly URLs (e.g., /web)</div>
+                    </div>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input type="checkbox" is="emby-checkbox" id="autoGenerateUrls" />
+                            <span>Automatically generate URLs for new content</span>
+                        </label>
+                    </div>
+
+                    <br />
+                    <button is="emby-button" type="submit" class="raised button-submit block">
+                        <span>Save</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            $('.pluginConfigurationForm').on('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(PluginManager.plugins.find(p => p.Name === 'Friendly URLs').Id).then(function (config) {
+                    config.EnableMovieUrls = $('#enableMovieUrls').checked();
+                    config.EnableShowUrls = $('#enableShowUrls').checked();
+                    config.EnablePersonUrls = $('#enablePersonUrls').checked();
+                    config.EnableCollectionUrls = $('#enableCollectionUrls').checked();
+                    config.BaseUrl = $('#baseUrl').val();
+                    config.AutoGenerateUrls = $('#autoGenerateUrls').checked();
+
+                    ApiClient.updatePluginConfiguration(PluginManager.plugins.find(p => p.Name === 'Friendly URLs').Id, config).then(function () {
+                        Dashboard.hideLoadingMsg();
+                        require(['toast'], function (toast) {
+                            toast('Configuration saved');
+                        });
+                    });
+                });
+            });
+
+            $('.pluginConfigurationPage').on('pageshow', function () {
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(PluginManager.plugins.find(p => p.Name === 'Friendly URLs').Id).then(function (config) {
+                    $('#enableMovieUrls').checked(config.EnableMovieUrls || false);
+                    $('#enableShowUrls').checked(config.EnableShowUrls || false);
+                    $('#enablePersonUrls').checked(config.EnablePersonUrls || false);
+                    $('#enableCollectionUrls').checked(config.EnableCollectionUrls || false);
+                    $('#baseUrl').val(config.BaseUrl || '/web');
+                    $('#autoGenerateUrls').checked(config.AutoGenerateUrls || false);
+
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>

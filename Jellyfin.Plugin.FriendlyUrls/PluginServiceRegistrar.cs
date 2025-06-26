@@ -18,9 +18,13 @@ namespace Jellyfin.Plugin.FriendlyUrls
         /// <param name="serverApplicationHost">Server application host.</param>
         public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost serverApplicationHost)
         {
+            // Register core services
             serviceCollection.AddSingleton<IFriendlyUrlRepository, FriendlyUrlRepository>();
             serviceCollection.AddSingleton<SlugService>();
             serviceCollection.AddSingleton<IUrlGeneratorService, UrlGeneratorService>();
+
+            // Register library monitor as hosted service
+            serviceCollection.AddHostedService<LibraryMonitorService>();
         }
     }
 }

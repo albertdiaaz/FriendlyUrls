@@ -87,6 +87,22 @@
                         </button>
                     </div>
                 </form>
+
+                <div style="margin-top: 2em;">
+                    <h3>Bulk Operations</h3>
+                    <div style="margin-bottom: 1em;">
+                        <button id="GenerateAllUrls" is="emby-button" type="button" class="raised block emby-button">
+                            <span>Generate URLs for All Existing Content</span>
+                        </button>
+                        <div class="fieldDescription">This will scan your entire library and generate friendly URLs for all supported content. This may take some time for large libraries.</div>
+                    </div>
+
+                    <div id="BulkProgress" style="display: none; margin-top: 1em;">
+                        <div class="fieldDescription">
+                            <span id="ProgressText">Generating URLs...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <script type="text/javascript">
@@ -146,6 +162,49 @@
                         });
                     });
                     return false;
+                });
+
+            document.querySelector('#GenerateAllUrls')
+                .addEventListener('click', function () {
+                    var button = this;
+                    var progressDiv = document.querySelector('#BulkProgress');
+                    var progressText = document.querySelector('#ProgressText');
+
+                    button.disabled = true;
+                    progressDiv.style.display = 'block';
+                    progressText.textContent = 'Generating URLs... This may take a while.';
+
+                    fetch('/FriendlyUrls/generate-all', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"'
+                        }
+                    })
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (data) {
+                            button.disabled = false;
+                            progressDiv.style.display = 'none';
+
+                            if (data.success) {
+                                require(['toast'], function (toast) {
+                                    toast('Bulk generation completed! Generated ' + data.generated + ' URLs from ' + data.processed + ' items.');
+                                });
+                            } else {
+                                require(['toast'], function (toast) {
+                                    toast('Error during bulk generation: ' + (data.message || 'Unknown error'));
+                                });
+                            }
+                        })
+                        .catch(function (error) {
+                            button.disabled = false;
+                            progressDiv.style.display = 'none';
+                            require(['toast'], function (toast) {
+                                toast('Error during bulk generation: ' + error);
+                            });
+                        });
                 });
         </script>
     </div>

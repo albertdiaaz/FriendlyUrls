@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.IO;
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
 using Jellyfin.Plugin.FriendlyUrls.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.FriendlyUrls.Data
 {
+    /// <summary>
+    /// Interface for friendly URL repository operations.
+    /// </summary>
     public interface IFriendlyUrlRepository
     {
         Task<FriendlyUrlMapping?> GetByFriendlyUrlAsync(string friendlyUrl);
@@ -20,115 +24,144 @@ namespace Jellyfin.Plugin.FriendlyUrls.Data
     }
 
     /// <summary>
-    /// Repository for managing friendly URL mappings in SQLite database
+    /// JSON-based repository for managing friendly URL mappings.
     /// </summary>
     public class FriendlyUrlRepository : IFriendlyUrlRepository
     {
-        private readonly FriendlyUrlContext _context;
+        private readonly string _dataPath;
+        private readonly ILogger<FriendlyUrlRepository> _logger;
+        private readonly object _lock = new object();
 
-        public FriendlyUrlRepository(IApplicationPaths appPaths)
+        public FriendlyUrlRepository(IApplicationPaths appPaths, ILogger<FriendlyUrlRepository> logger)
         {
-            var dbPath = Path.Combine(appPaths.DataPath, "friendly-urls.db");
-            _context = new FriendlyUrlContext(dbPath);
-            _context.Database.EnsureCreated();
+            _dataPath = Path.Combine(appPaths.DataPath, "friendly-urls.json");
+            _logger = logger;
         }
 
         /// <summary>
-        /// Gets a mapping by its friendly URL
+        /// Gets a mapping by its friendly URL.
         /// </summary>
-        /// <param name="friendlyUrl">The friendly URL to search for</param>
-        /// <returns>Matching mapping or null</returns>
+        /// <param name="friendlyUrl">The friendly URL to search for.</param>
+        /// <returns>Matching mapping or null.</returns>
         public async Task<FriendlyUrlMapping?> GetByFriendlyUrlAsync(string friendlyUrl)
         {
-            return await _context.FriendlyUrls
-                .FirstOrDefaultAsync(u => u.FriendlyUrl == friendlyUrl && u.IsActive);
+            var mappings = await LoadMappingsAsync();
+            return mappings.FirstOrDefault(m => m.FriendlyUrl == friendlyUrl && m.IsActive);
         }
 
         /// <summary>
-        /// Gets a mapping by its item ID
+        /// Gets a mapping by its item ID.
         /// </summary>
-        /// <param name="itemId">The item ID to search for</param>
-        /// <returns>Matching mapping or null</returns>
+        /// <param name="itemId">The item ID to search for.</param>
+        /// <returns>Matching mapping or null.</returns>
         public async Task<FriendlyUrlMapping?> GetByItemIdAsync(Guid itemId)
         {
-            return await _context.FriendlyUrls
-                .FirstOrDefaultAsync(u => u.ItemId == itemId && u.IsActive);
+            var mappings = await LoadMappingsAsync();
+            return mappings.FirstOrDefault(m => m.ItemId == itemId && m.IsActive);
         }
 
         /// <summary>
-        /// Gets all URL mappings
+        /// Gets all URL mappings.
         /// </summary>
-        /// <returns>Collection of all mappings</returns>
+        /// <returns>Collection of all mappings.</returns>
         public async Task<IEnumerable<FriendlyUrlMapping>> GetAllAsync()
         {
-            return await _context.FriendlyUrls.ToListAsync();
+            return await LoadMappingsAsync();
         }
 
         /// <summary>
-        /// Saves a new mapping to the database
+        /// Saves a new mapping to the storage.
         /// </summary>
-        /// <param name="mapping">The mapping to save</param>
+        /// <param name="mapping">The mapping to save.</param>
         public async Task SaveAsync(FriendlyUrlMapping mapping)
         {
-            _context.FriendlyUrls.Add(mapping);
-            await _context.SaveChangesAsync();
+            var mappings = (await LoadMappingsAsync()).ToList();
+            mappings.Add(mapping);
+            await SaveMappingsAsync(mappings);
         }
 
         /// <summary>
-        /// Updates an existing mapping
+        /// Updates an existing mapping.
         /// </summary>
-        /// <param name="mapping">The mapping to update</param>
+        /// <param name="mapping">The mapping to update.</param>
         public async Task UpdateAsync(FriendlyUrlMapping mapping)
         {
-            mapping.UpdatedAt = DateTime.UtcNow;
-            _context.FriendlyUrls.Update(mapping);
-            await _context.SaveChangesAsync();
+            var mappings = (await LoadMappingsAsync()).ToList();
+            var index = mappings.FindIndex(m => m.Id == mapping.Id);
+            if (index >= 0)
+            {
+                mapping.UpdatedAt = DateTime.UtcNow;
+                mappings[index] = mapping;
+                await SaveMappingsAsync(mappings);
+            }
         }
 
         /// <summary>
-        /// Deletes a mapping by its ID
+        /// Deletes a mapping by its ID.
         /// </summary>
-        /// <param name="id">The ID of the mapping to delete</param>
+        /// <param name="id">The ID of the mapping to delete.</param>
         public async Task DeleteAsync(Guid id)
         {
-            var mapping = await _context.FriendlyUrls.FindAsync(id);
-            if (mapping != null)
+            var mappings = (await LoadMappingsAsync()).ToList();
+            mappings.RemoveAll(m => m.Id == id);
+            await SaveMappingsAsync(mappings);
+        }
+
+        private async Task<List<FriendlyUrlMapping>> LoadMappingsAsync()
+        {
+            lock (_lock)
             {
-                _context.FriendlyUrls.Remove(mapping);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    if (!File.Exists(_dataPath))
+                    {
+                        return new List<FriendlyUrlMapping>();
+                    }
+
+                    var json = File.ReadAllText(_dataPath);
+                    if (string.IsNullOrWhiteSpace(json))
+                    {
+                        return new List<FriendlyUrlMapping>();
+                    }
+
+                    var mappings = JsonSerializer.Deserialize<List<FriendlyUrlMapping>>(json);
+                    return mappings ?? new List<FriendlyUrlMapping>();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error loading friendly URL mappings from {Path}", _dataPath);
+                    return new List<FriendlyUrlMapping>();
+                }
             }
         }
-    }
 
-    /// <summary>
-    /// Entity Framework context for friendly URL mappings
-    /// </summary>
-    public class FriendlyUrlContext : DbContext
-    {
-        private readonly string _dbPath;
-
-        public FriendlyUrlContext(string dbPath)
+        private async Task SaveMappingsAsync(List<FriendlyUrlMapping> mappings)
         {
-            _dbPath = dbPath;
-        }
-
-        public DbSet<FriendlyUrlMapping> FriendlyUrls { get; set; } = null!;
-
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
-        {
-            options.UseSqlite($"Data Source={_dbPath}");
-        }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<FriendlyUrlMapping>(entity =>
+            await Task.Run(() =>
             {
-                entity.HasKey(e => e.Id);
-                entity.HasIndex(e => e.FriendlyUrl).IsUnique();
-                entity.HasIndex(e => e.ItemId);
-                entity.Property(e => e.FriendlyUrl).IsRequired().HasMaxLength(500);
-                entity.Property(e => e.OriginalUrl).IsRequired().HasMaxLength(1000);
-                entity.Property(e => e.ItemType).IsRequired().HasMaxLength(50);
+                lock (_lock)
+                {
+                    try
+                    {
+                        var directory = Path.GetDirectoryName(_dataPath);
+                        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                        {
+                            Directory.CreateDirectory(directory);
+                        }
+
+                        var options = new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        };
+
+                        var json = JsonSerializer.Serialize(mappings, options);
+                        File.WriteAllText(_dataPath, json);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error saving friendly URL mappings to {Path}", _dataPath);
+                    }
+                }
             });
         }
     }

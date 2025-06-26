@@ -1,0 +1,17 @@
+---
+name: "Friendly URLs"
+guid: "88a82cc1-52b2-47be-8f24-590da28257f7"
+version: "1.0.0.0"
+targetAbi: "10.9.0.0"
+framework: "net8.0"
+overview: "Generates friendly URLs for movies, shows, people and more"
+description: >
+  This plugin generates SEO-friendly URLs for your Jellyfin media items.
+  It creates human-readable URLs for movies, TV shows, people, collections,
+  genres, and studios, making your media more accessible and searchable.
+category: "General"
+owner: "jellyfin"
+artifacts:
+- "Jellyfin.Plugin.FriendlyUrls.dll"
+changelog: >
+  Initial release with support for friendly URLs

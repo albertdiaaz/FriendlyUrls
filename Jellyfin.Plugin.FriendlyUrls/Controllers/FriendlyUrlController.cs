@@ -9,7 +9,7 @@ using Jellyfin.Plugin.FriendlyUrls.Services;
 namespace Jellyfin.Plugin.FriendlyUrls.Controllers
 {
     /// <summary>
-    /// API controller for managing friendly URLs
+    /// API controller for managing friendly URLs.
     /// </summary>
     [ApiController]
     [Route("FriendlyUrls")]
@@ -20,6 +20,13 @@ namespace Jellyfin.Plugin.FriendlyUrls.Controllers
         private readonly ILibraryManager _libraryManager;
         private readonly ILogger<FriendlyUrlController> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FriendlyUrlController"/> class.
+        /// </summary>
+        /// <param name="repository">The friendly URL repository.</param>
+        /// <param name="urlGenerator">The URL generator service.</param>
+        /// <param name="libraryManager">The library manager.</param>
+        /// <param name="logger">The logger.</param>
         public FriendlyUrlController(
             IFriendlyUrlRepository repository,
             IUrlGeneratorService urlGenerator,
@@ -33,10 +40,10 @@ namespace Jellyfin.Plugin.FriendlyUrls.Controllers
         }
 
         /// <summary>
-        /// Resolves a friendly URL to its original Jellyfin URL
+        /// Resolves a friendly URL to its original Jellyfin URL.
         /// </summary>
-        /// <param name="friendlyUrl">The friendly URL to resolve</param>
-        /// <returns>Redirect to original URL or 404</returns>
+        /// <param name="friendlyUrl">The friendly URL to resolve.</param>
+        /// <returns>Redirect to original URL or 404.</returns>
         [HttpGet("resolve/{*friendlyUrl}")]
         public async Task<IActionResult> ResolveFriendlyUrl(string friendlyUrl)
         {
@@ -70,10 +77,10 @@ namespace Jellyfin.Plugin.FriendlyUrls.Controllers
         }
 
         /// <summary>
-        /// Generates a friendly URL for a specific item
+        /// Generates a friendly URL for a specific item.
         /// </summary>
-        /// <param name="itemId">The ID of the item to generate URL for</param>
-        /// <returns>Generated friendly URL</returns>
+        /// <param name="itemId">The ID of the item to generate URL for.</param>
+        /// <returns>Generated friendly URL.</returns>
         [HttpPost("generate/{itemId}")]
         public async Task<IActionResult> GenerateUrl(Guid itemId)
         {
@@ -116,9 +123,9 @@ namespace Jellyfin.Plugin.FriendlyUrls.Controllers
         }
 
         /// <summary>
-        /// Gets all URL mappings
+        /// Gets all URL mappings.
         /// </summary>
-        /// <returns>List of all mappings</returns>
+        /// <returns>List of all mappings.</returns>
         [HttpGet("mappings")]
         public async Task<IActionResult> GetAllMappings()
         {
@@ -135,9 +142,9 @@ namespace Jellyfin.Plugin.FriendlyUrls.Controllers
         }
 
         /// <summary>
-        /// Health check endpoint
+        /// Health check endpoint.
         /// </summary>
-        /// <returns>Plugin status</returns>
+        /// <returns>Plugin status.</returns>
         [HttpGet("health")]
         public IActionResult HealthCheck()
         {

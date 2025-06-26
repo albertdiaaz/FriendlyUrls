@@ -2,11 +2,14 @@
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Controller.Library;
 using Jellyfin.Plugin.FriendlyUrls.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.FriendlyUrls.Services
 {
+    /// <summary>
+    /// Interface for URL generation service.
+    /// </summary>
     public interface IUrlGeneratorService
     {
         string? GenerateFriendlyUrl(BaseItem item);
@@ -14,87 +17,108 @@ namespace Jellyfin.Plugin.FriendlyUrls.Services
     }
 
     /// <summary>
-    /// Service responsible for generating friendly URLs for different media types
+    /// Service responsible for generating friendly URLs for different media types.
     /// </summary>
     public class UrlGeneratorService : IUrlGeneratorService
     {
         private readonly SlugService _slugService;
-        private readonly ILibraryManager _libraryManager;
+        private readonly ILogger<UrlGeneratorService> _logger;
 
-        public UrlGeneratorService(SlugService slugService, ILibraryManager libraryManager)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UrlGeneratorService"/> class.
+        /// </summary>
+        /// <param name="slugService">The slug service.</param>
+        /// <param name="logger">The logger.</param>
+        public UrlGeneratorService(SlugService slugService, ILogger<UrlGeneratorService> logger)
         {
             _slugService = slugService;
-            _libraryManager = libraryManager;
+            _logger = logger;
         }
 
         /// <summary>
-        /// Generates a friendly URL for the given media item
+        /// Generates a friendly URL for the given media item.
         /// </summary>
-        /// <param name="item">The media item to generate URL for</param>
-        /// <returns>Friendly URL string or null if not supported</returns>
+        /// <param name="item">The media item to generate URL for.</param>
+        /// <returns>Friendly URL string or null if not supported.</returns>
         public string? GenerateFriendlyUrl(BaseItem item)
         {
-            var baseUrl = Jellyfin.Plugin.FriendlyUrls.Plugin.Instance?.Configuration?.BaseUrl?.TrimEnd('/') ?? "/web";
+            if (item == null)
+            {
+                return null;
+            }
+
+            var config = Plugin.Instance?.Configuration;
+            var baseUrl = config?.BaseUrl?.TrimEnd('/') ?? "/web";
 
             return item switch
             {
-                Movie movie => $"{baseUrl}/movie/{_slugService.CreateSlug(movie.Name ?? "")}-{movie.ProductionYear}",
-                Series show => $"{baseUrl}/show/{_slugService.CreateSlug(show.Name ?? "")}-{show.ProductionYear}",
-                Season season when season.Series != null => $"{baseUrl}/show/{_slugService.CreateSlug(season.Series.Name ?? "")}/season-{season.IndexNumber}",
-                Episode episode when episode.Series != null => $"{baseUrl}/show/{_slugService.CreateSlug(episode.Series.Name ?? "")}/season-{episode.ParentIndexNumber}/episode-{episode.IndexNumber}",
-                Person person => $"{baseUrl}/person/{_slugService.CreateSlug(person.Name ?? "")}",
-                BoxSet collection => $"{baseUrl}/collection/{_slugService.CreateSlug(collection.Name ?? "")}",
-                Genre genre => $"{baseUrl}/genre/{_slugService.CreateSlug(genre.Name ?? "")}",
-                Studio studio => $"{baseUrl}/studio/{_slugService.CreateSlug(studio.Name ?? "")}",
+                Movie movie when config?.EnableMovieUrls == true =>
+                    $"{baseUrl}/movie/{_slugService.CreateSlug(movie.Name ?? "")}-{movie.ProductionYear}",
+
+                Series show when config?.EnableShowUrls == true =>
+                    $"{baseUrl}/show/{_slugService.CreateSlug(show.Name ?? "")}-{show.ProductionYear}",
+
+                Season season when config?.EnableShowUrls == true && season.Series != null =>
+                    $"{baseUrl}/show/{_slugService.CreateSlug(season.Series.Name ?? "")}/season-{season.IndexNumber}",
+
+                Episode episode when config?.EnableShowUrls == true && episode.Series != null =>
+                    $"{baseUrl}/show/{_slugService.CreateSlug(episode.Series.Name ?? "")}/season-{episode.ParentIndexNumber}/episode-{episode.IndexNumber}",
+
+                Person person when config?.EnablePersonUrls == true =>
+                    $"{baseUrl}/person/{_slugService.CreateSlug(person.Name ?? "")}",
+
+                BoxSet collection when config?.EnableCollectionUrls == true =>
+                    $"{baseUrl}/collection/{_slugService.CreateSlug(collection.Name ?? "")}",
+
+                Genre genre when config?.EnableGenreUrls == true =>
+                    $"{baseUrl}/genre/{_slugService.CreateSlug(genre.Name ?? "")}",
+
+                Studio studio when config?.EnableStudioUrls == true =>
+                    $"{baseUrl}/studio/{_slugService.CreateSlug(studio.Name ?? "")}",
+
                 _ => null
             };
         }
 
         /// <summary>
-        /// Creates a complete URL mapping for the given item
+        /// Creates a complete URL mapping for the given item.
         /// </summary>
-        /// <param name="item">The media item to create mapping for</param>
-        /// <returns>FriendlyUrlMapping object or null if not supported</returns>
+        /// <param name="item">The media item to create mapping for.</param>
+        /// <returns>FriendlyUrlMapping object or null if not supported.</returns>
         public FriendlyUrlMapping? CreateMapping(BaseItem item)
         {
+            if (item == null)
+            {
+                _logger.LogWarning("Cannot create mapping for null item");
+                return null;
+            }
+
             var friendlyUrl = GenerateFriendlyUrl(item);
             if (string.IsNullOrEmpty(friendlyUrl))
+            {
+                _logger.LogDebug("No friendly URL generated for item {ItemId} of type {ItemType}", item.Id, item.GetType().Name);
                 return null;
+            }
 
-            // Get server ID (for Jellyfin, this is usually a fixed value or can be obtained from configuration)
-            var serverId = GetServerIdFromItem(item);
+            // Generate original URL - simplified approach
+            var originalUrl = $"/web/index.html#!/details?id={item.Id}";
 
-            return new FriendlyUrlMapping
+            var mapping = new FriendlyUrlMapping
             {
                 Id = Guid.NewGuid(),
                 ItemId = item.Id,
                 ItemType = item.GetType().Name,
                 FriendlyUrl = friendlyUrl,
-                OriginalUrl = $"/web/index.html#!/details?id={item.Id}&serverId={serverId}",
+                OriginalUrl = originalUrl,
                 CreatedAt = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                AccessCount = 0
             };
-        }
 
-        /// <summary>
-        /// Gets the server ID for the given item
-        /// </summary>
-        /// <param name="item">The media item</param>
-        /// <returns>Server ID string</returns>
-        private string GetServerIdFromItem(BaseItem item)
-        {
-            try
-            {
-                // For Jellyfin, the server ID is typically available from the system info
-                // This is a simplified approach - in a real implementation you might want to
-                // get this from Jellyfin's configuration or system info
-                return Environment.MachineName.ToLowerInvariant().Replace(" ", "-");
-            }
-            catch
-            {
-                // Fallback to a default value
-                return "jellyfin-server";
-            }
+            _logger.LogDebug("Created mapping for item {ItemId}: {FriendlyUrl} -> {OriginalUrl}",
+                item.Id, friendlyUrl, originalUrl);
+
+            return mapping;
         }
     }
 }

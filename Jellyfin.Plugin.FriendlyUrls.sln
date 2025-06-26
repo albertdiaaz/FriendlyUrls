@@ -1,25 +1,34 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.11.35222.181
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.FriendlyUrls", "Jellyfin.Plugin.FriendlyUrls\Jellyfin.Plugin.FriendlyUrls.csproj", "{45A5D39F-6163-4857-9E46-30A26220142A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Plugin.FriendlyUrls", "Jellyfin.Plugin.FriendlyUrls\Jellyfin.Plugin.FriendlyUrls.csproj", "{12345678-1234-5678-9012-123456789012}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{45A5D39F-6163-4857-9E46-30A26220142A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{45A5D39F-6163-4857-9E46-30A26220142A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{45A5D39F-6163-4857-9E46-30A26220142A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{45A5D39F-6163-4857-9E46-30A26220142A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Debug|x64.Build.0 = Debug|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Debug|x86.Build.0 = Debug|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Release|x64.ActiveCfg = Release|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Release|x64.Build.0 = Release|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Release|x86.ActiveCfg = Release|Any CPU
+		{12345678-1234-5678-9012-123456789012}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {513425AF-666B-4F00-9188-DEB23208FD8E}
 	EndGlobalSection
 EndGlobal

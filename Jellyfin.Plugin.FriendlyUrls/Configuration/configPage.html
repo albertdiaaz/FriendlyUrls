@@ -1,84 +1,138 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Friendly URLs - Configuration</title>
+    <meta charset="utf-8">
+    <title>Friendly URLs</title>
 </head>
 <body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
+    <div id="FriendlyUrlsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
-                <form class="pluginConfigurationForm">
+                <form id="FriendlyUrlsConfigForm">
                     <h2>Friendly URLs Configuration</h2>
 
-                    <div class="checkboxContainer">
-                        <label>
-                            <input type="checkbox" is="emby-checkbox" id="enableMovieUrls" />
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="EnableMovieUrls" name="EnableMovieUrls" type="checkbox" is="emby-checkbox" />
                             <span>Enable URLs for movies</span>
                         </label>
+                        <div class="fieldDescription">Generate friendly URLs for movie items</div>
                     </div>
 
-                    <div class="checkboxContainer">
-                        <label>
-                            <input type="checkbox" is="emby-checkbox" id="enableShowUrls" />
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="EnableShowUrls" name="EnableShowUrls" type="checkbox" is="emby-checkbox" />
                             <span>Enable URLs for shows</span>
                         </label>
+                        <div class="fieldDescription">Generate friendly URLs for TV show items</div>
                     </div>
 
-                    <div class="checkboxContainer">
-                        <label>
-                            <input type="checkbox" is="emby-checkbox" id="enablePersonUrls" />
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="EnablePersonUrls" name="EnablePersonUrls" type="checkbox" is="emby-checkbox" />
                             <span>Enable URLs for people</span>
                         </label>
+                        <div class="fieldDescription">Generate friendly URLs for person items</div>
                     </div>
 
-                    <div class="checkboxContainer">
-                        <label>
-                            <input type="checkbox" is="emby-checkbox" id="enableCollectionUrls" />
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="EnableCollectionUrls" name="EnableCollectionUrls" type="checkbox" is="emby-checkbox" />
                             <span>Enable URLs for collections</span>
                         </label>
+                        <div class="fieldDescription">Generate friendly URLs for collection items</div>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="EnableGenreUrls" name="EnableGenreUrls" type="checkbox" is="emby-checkbox" />
+                            <span>Enable URLs for genres</span>
+                        </label>
+                        <div class="fieldDescription">Generate friendly URLs for genre items</div>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="EnableStudioUrls" name="EnableStudioUrls" type="checkbox" is="emby-checkbox" />
+                            <span>Enable URLs for studios</span>
+                        </label>
+                        <div class="fieldDescription">Generate friendly URLs for studio items</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label for="baseUrl">Base URL:</label>
-                        <input type="text" id="baseUrl" is="emby-input" />
+                        <label class="inputLabel inputLabelUnfocused" for="BaseUrl">Base URL</label>
+                        <input id="BaseUrl" name="BaseUrl" type="text" is="emby-input" />
                         <div class="fieldDescription">Base URL for friendly URLs (e.g., /web)</div>
                     </div>
 
-                    <div class="checkboxContainer">
-                        <label>
-                            <input type="checkbox" is="emby-checkbox" id="autoGenerateUrls" />
-                            <span>Automatically generate URLs for new content</span>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="ForceHttps" name="ForceHttps" type="checkbox" is="emby-checkbox" />
+                            <span>Force HTTPS</span>
                         </label>
+                        <div class="fieldDescription">Force HTTPS in generated URLs</div>
                     </div>
 
-                    <br />
-                    <button is="emby-button" type="submit" class="raised button-submit block">
-                        <span>Save</span>
-                    </button>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="AutoGenerateUrls" name="AutoGenerateUrls" type="checkbox" is="emby-checkbox" />
+                            <span>Automatically generate URLs for new content</span>
+                        </label>
+                        <div class="fieldDescription">Automatically create friendly URLs when new content is added</div>
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
-
         <script type="text/javascript">
-            (function () {
-                var pluginId = '12345678-1234-5678-9012-123456789012';
+            var FriendlyUrlsConfig = {
+                pluginUniqueId: '88a82cc1-52b2-47be-8f24-590da28257f7'
+            };
 
-                function saveConfiguration() {
+            document.querySelector('#FriendlyUrlsConfigPage')
+                .addEventListener('pageshow', function () {
                     Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(FriendlyUrlsConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#EnableMovieUrls').checked = config.EnableMovieUrls || false;
+                        document.querySelector('#EnableShowUrls').checked = config.EnableShowUrls || false;
+                        document.querySelector('#EnablePersonUrls').checked = config.EnablePersonUrls || false;
+                        document.querySelector('#EnableCollectionUrls').checked = config.EnableCollectionUrls || false;
+                        document.querySelector('#EnableGenreUrls').checked = config.EnableGenreUrls || false;
+                        document.querySelector('#EnableStudioUrls').checked = config.EnableStudioUrls || false;
+                        document.querySelector('#BaseUrl').value = config.BaseUrl || '/web';
+                        document.querySelector('#ForceHttps').checked = config.ForceHttps || false;
+                        document.querySelector('#AutoGenerateUrls').checked = config.AutoGenerateUrls || false;
+                        Dashboard.hideLoadingMsg();
+                    }).catch(function (error) {
+                        Dashboard.hideLoadingMsg();
+                        require(['toast'], function (toast) {
+                            toast('Error loading configuration: ' + error);
+                        });
+                    });
+                });
 
-                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-                        config.EnableMovieUrls = document.getElementById('enableMovieUrls').checked;
-                        config.EnableShowUrls = document.getElementById('enableShowUrls').checked;
-                        config.EnablePersonUrls = document.getElementById('enablePersonUrls').checked;
-                        config.EnableCollectionUrls = document.getElementById('enableCollectionUrls').checked;
-                        config.BaseUrl = document.getElementById('baseUrl').value;
-                        config.AutoGenerateUrls = document.getElementById('autoGenerateUrls').checked;
+            document.querySelector('#FriendlyUrlsConfigForm')
+                .addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(FriendlyUrlsConfig.pluginUniqueId).then(function (config) {
+                        config.EnableMovieUrls = document.querySelector('#EnableMovieUrls').checked;
+                        config.EnableShowUrls = document.querySelector('#EnableShowUrls').checked;
+                        config.EnablePersonUrls = document.querySelector('#EnablePersonUrls').checked;
+                        config.EnableCollectionUrls = document.querySelector('#EnableCollectionUrls').checked;
+                        config.EnableGenreUrls = document.querySelector('#EnableGenreUrls').checked;
+                        config.EnableStudioUrls = document.querySelector('#EnableStudioUrls').checked;
+                        config.BaseUrl = document.querySelector('#BaseUrl').value;
+                        config.ForceHttps = document.querySelector('#ForceHttps').checked;
+                        config.AutoGenerateUrls = document.querySelector('#AutoGenerateUrls').checked;
 
-                        ApiClient.updatePluginConfiguration(pluginId, config).then(function () {
-                            Dashboard.hideLoadingMsg();
-                            require(['toast'], function (toast) {
-                                toast('Configuration saved');
-                            });
+                        ApiClient.updatePluginConfiguration(FriendlyUrlsConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
                         }).catch(function (error) {
                             Dashboard.hideLoadingMsg();
                             require(['toast'], function (toast) {
@@ -91,38 +145,8 @@
                             toast('Error loading configuration: ' + error);
                         });
                     });
-                }
-
-                function loadConfiguration() {
-                    Dashboard.showLoadingMsg();
-
-                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-                        document.getElementById('enableMovieUrls').checked = config.EnableMovieUrls || false;
-                        document.getElementById('enableShowUrls').checked = config.EnableShowUrls || false;
-                        document.getElementById('enablePersonUrls').checked = config.EnablePersonUrls || false;
-                        document.getElementById('enableCollectionUrls').checked = config.EnableCollectionUrls || false;
-                        document.getElementById('baseUrl').value = config.BaseUrl || '/web';
-                        document.getElementById('autoGenerateUrls').checked = config.AutoGenerateUrls || false;
-
-                        Dashboard.hideLoadingMsg();
-                    }).catch(function (error) {
-                        Dashboard.hideLoadingMsg();
-                        require(['toast'], function (toast) {
-                            toast('Error loading configuration: ' + error);
-                        });
-                    });
-                }
-
-                // Event handlers
-                document.querySelector('.pluginConfigurationForm').addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    saveConfiguration();
+                    return false;
                 });
-
-                document.querySelector('.pluginConfigurationPage').addEventListener('pageshow', function () {
-                    loadConfiguration();
-                });
-            })();
         </script>
     </div>
 </body>
